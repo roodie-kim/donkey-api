@@ -44,7 +44,4 @@ Route::post('/votes', 'VotesController@store')->middleware('auth:api');
 
 // test
 // images
-//Route::post('/images', 'ImagesController@store')->middleware('auth:api');
-Route::post('/images', function () {
-    return 'aa';
-});
+Route::post('/images', 'ImagesController@store')->middleware('auth:api');
