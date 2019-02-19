@@ -12,7 +12,7 @@ class Post extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'board_id', 'title', 'body', 'view_count',
+        'user_id', 'board_id', 'title', 'body', 'view_count', 'hided_at',
     ];
 
     protected $hidden = [

@@ -16,10 +16,10 @@ class CreatePostsTable extends Migration
         Schema::create('posts', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('user_id')->unsigned();
-            $table->integer('board_id')->unsigned();
             $table->string('title');
             $table->text('body');
             $table->integer('view_count')->unsigned()->default(0);
+            $table->dateTime('hided_at');
             $table->timestamps();
             $table->softDeletes();
         });

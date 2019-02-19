@@ -19,7 +19,7 @@ class ConfigController extends Controller
     public function changeNickname(Request $request)
     {
         $validation = Validator::make($request->all(), [
-            'name' => 'required|unique:users|min:4|max:20',
+            'name' => 'required|unique:users|min:3|max:20',
         ]);
 
         if ($validation->fails()) {

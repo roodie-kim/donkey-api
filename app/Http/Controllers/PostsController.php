@@ -15,7 +15,6 @@ class PostsController extends Controller
     public function index(Request $request)
     {
         $validation = Validator::make($request->all(), [
-            'board_name' => 'required|string',
             'page' => 'required|integer',
         ]);
 
@@ -25,12 +24,10 @@ class PostsController extends Controller
 
         $user = Auth::guard('api')->user();
 
-        $perPage = 50;
+        $perPage = 30;
         $skip = ($request->page - 1) * $perPage;
 
-        $boardId = Board::where('name', $request->board_name)->value('id');
-
-        $posts = Post::where('board_id', $boardId)
+        $posts = Post::where('hided_at', '>=', Carbon::now())
             ->skip($skip)->take($perPage)
             ->orderBy('id', 'desc')
             ->with('user')
@@ -47,18 +44,19 @@ class PostsController extends Controller
 
         // votes object 모양 수정
         $posts = $posts
-            ->map(function ($post) {
+            ->map(function ($post) use ($user) {
                 $votes = new \stdClass();
                 $votes->up_count = $post->up_count;
                 $votes->down_count = $post->down_count;
                 $post->votes = $votes;
+                $post->is_mine = $user ? $user->id === $post->user_id : false;
 
                 unset($post->up_count); unset($post->down_count);
                 return $post;
             });
 
         $result['posts'] = $posts;
-        $result['count'] = Post::where('board_id', $boardId)->count();
+        $result['count'] = Post::where('hided_at', '>=', Carbon::now())->count();
 
         return response()->json($result);
     }
@@ -66,7 +64,6 @@ class PostsController extends Controller
     public function store(Request $request)
     {
         $validation = Validator::make($request->all(), [
-            'board_name' => 'required|string',
             'title' => 'required|max:100',
             'body' => 'required',
         ]);
@@ -82,14 +79,12 @@ class PostsController extends Controller
             return response()->json($errorMessage, 400);
         }
 
-        $boardId = Board::where('name', $request->board_name)->value('id');
-
         $user = $request->user();
 
         $post = $user->posts()->create([
-            'board_id' => $boardId,
             'title' => $request->title,
             'body' => $request->body,
+            'hided_at' => Carbon::now()->addMinutes(20),
         ]);
 
         return response()->json($post, 201);
@@ -126,6 +121,7 @@ class PostsController extends Controller
         $user = Auth::guard('api')->user();
 
         $post = Post::where('id', $post)
+            ->where('hided_at', '>=', Carbon::now())
             ->with(['user', 'myVote'])
             ->withCount([
                 'comments',
@@ -137,6 +133,10 @@ class PostsController extends Controller
                 },
             ])->first();
 
+        if ($post === null) {
+            return response()->json(['message' => '삭제된 글입니다.'], 404);
+        }
+
         $post->view_count ++;
         $post->save();
 
@@ -145,6 +145,7 @@ class PostsController extends Controller
         $votes->down_count = $post->down_count;
         $post->votes = $votes;
         $post->has_voted = $user ? $post->votes()->where('user_id', $user->id)->exists() : false;
+        $post->is_mine = $user ? $user->id === $post->user_id : false;
 
         if ($post->has_voted) {
             $post->my_vote_type = $post->myVote->type;
@@ -196,25 +197,5 @@ class PostsController extends Controller
         $post->delete();
 
         return response()->json(['message' => 'post deleted'], 200);
-    }
-
-    public function bestIndex(Request $request)
-    {
-        $validation = Validator::make($request->all(), [
-            'board_name' => 'required|string',
-        ]);
-
-        if ($validation->fails()) {
-            return response()->json($validation->errors(), 400);
-        }
-
-        $boardId = Board::where('name', $request->board_name)->value('id');
-
-        $posts = Post::withCount('votes')->where('board_id', $boardId)
-            ->orderBy('votes_count', 'desc')
-            ->where('created_at', '>=', Carbon::now()->subDays(3))->take(20)
-            ->get();
-
-        return $posts;
     }
 }
