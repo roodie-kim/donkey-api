@@ -42,5 +42,6 @@ Route::delete('/comments/{comment}', 'CommentsController@delete')->middleware('a
 // votes
 Route::post('/votes', 'VotesController@store')->middleware('auth:api');
 
+// test
 // images
 Route::post('/images', 'ImagesController@store')->middleware('auth:api');
