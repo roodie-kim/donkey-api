@@ -8,6 +8,10 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
+use Carbon\Carbon;
+use DB;
+use App\Image;
+
 class DeleteOldShit implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -29,6 +33,15 @@ class DeleteOldShit implements ShouldQueue
      */
     public function handle()
     {
-        \Log::notice('test');
+        $baseTime = Carbon::now()->subHours(2)->toDateTimeString();
+
+        DB::table('posts')->where('created_at', '<=', $baseTime)->delete();
+        DB::table('comments')->where('created_at', '<=', $baseTime)->delete();
+
+        // DeleteImage Job for each image
+        $images = Image::where('created_at', '<=', $baseTime)->get();
+        foreach ($images as $image) {
+            DeleteImage::dispatch($image);
+        }
     }
 }
