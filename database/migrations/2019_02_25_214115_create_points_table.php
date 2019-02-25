@@ -17,7 +17,7 @@ class CreatePointsTable extends Migration
             $table->increments('id');
             $table->integer('user_id')->unsigned();
             $table->enum('type', ['login', 'post', 'vote']);
-            $table->integer('amount')->unsigned();
+            $table->integer('amount');
             $table->timestamps();
         });
     }

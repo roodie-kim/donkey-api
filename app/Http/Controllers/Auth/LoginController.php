@@ -9,12 +9,17 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use App\User;
 
+use App\Http\Traits\PointsTrait;
+
 class LoginController extends Controller
 {
+    use PointsTrait;
+
     protected function user(Request $request)
     {
         $user = $request->user();
-        return response()->json($user);
+
+        return response()->json($this->giveAuthPoints($user));
     }
 
     protected function login(Request $request)

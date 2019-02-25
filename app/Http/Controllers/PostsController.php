@@ -7,11 +7,14 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
-use App\Board;
 use App\Post;
+
+use App\Http\Traits\PointsTrait;
 
 class PostsController extends Controller
 {
+    use PointsTrait;
+
     public function index(Request $request)
     {
         $validation = Validator::make($request->all(), [
@@ -86,6 +89,8 @@ class PostsController extends Controller
             'body' => $request->body,
             'hided_at' => Carbon::now()->addMinutes(20),
         ]);
+
+        $this->givePostPoints($user);
 
         return response()->json($post, 201);
     }

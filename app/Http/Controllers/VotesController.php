@@ -9,8 +9,12 @@ use Carbon\Carbon;
 use DB;
 use App\Post;
 
+use App\Http\Traits\PointsTrait;
+
 class VotesController extends Controller
 {
+    use PointsTrait;
+
     public function store(Request $request)
     {
         $validation = Validator::make($request->all(), [
@@ -40,6 +44,7 @@ class VotesController extends Controller
                 'type' => $request->type,
             ]);
             $this->changeHideTime($post);
+            $this->getVotesPoints($post, $request->type);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'internal server error'], 500);
