@@ -44,7 +44,7 @@ class RegisterController extends Controller
         }
         DB::commit();
 
-        $token = $user->createToken('tv')->accessToken;
+        $token = $user->createToken('sonnol')->accessToken;
         return response()->json(['access_token' => $token], 201);
     }
 }

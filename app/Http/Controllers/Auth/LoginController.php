@@ -41,7 +41,7 @@ class LoginController extends Controller
         }
 
         if (Hash::check($request->password, $user->password)) {
-            $token = $user->createToken('project')->accessToken;
+            $token = $user->createToken('sonnol')->accessToken;
             return response()->json(['access_token' => $token]);
         } else {
             return response()->json(['message' => '잘못된 비밀번호입니다.'], 401);
@@ -70,7 +70,7 @@ class LoginController extends Controller
         }
 
         if (Hash::check($request->password, $user->password)) {
-            $token = $user->createToken('project')->accessToken;
+            $token = $user->createToken('sonnol')->accessToken;
             return response()->json(['access_token' => $token]);
         } else {
             return response()->json(['password' => 'wrong password'], 401);
