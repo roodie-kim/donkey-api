@@ -5,7 +5,11 @@ namespace App;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
+use App\Level_Range;
+
 
 class User extends Authenticatable
 {
@@ -24,6 +28,8 @@ class User extends Authenticatable
     protected $dates = [
         'deleted_at',
     ];
+
+    protected $appends = ['level_info'];
 
     protected $casts = [
         'is_admin' => 'boolean',
@@ -49,8 +55,40 @@ class User extends Authenticatable
         return $this->hasMany(Vote::class, 'user_id', 'id');
     }
 
+    public function points()
+    {
+        return $this->hasMany(Point::class, 'user_id', 'id');
+    }
+
     public function boardRequest()
     {
         return $this->hasMany(Board_Request::class, 'user_id', 'id');
     }
+
+    public function getLevelInfoAttribute()
+    {
+        $levelInfo = new \stdClass();
+        $points = (int) $this->points()->sum('amount');
+
+        $levelInfo->points = $points;
+        $levelRange = $this->getLevelRange();
+        foreach ($levelRange as $range) {
+            if ($range->min_points <= $points && $points <= $range->max_points) {
+                $levelInfo->level = $range->id;
+                return $levelInfo;
+            }
+        }
+    }
+
+    public function getLevelRange()
+    {
+        if (Cache::has('level_range')) {
+            $levelRange = Cache::get('level_range');
+        } else {
+            $levelRange = Level_Range::get();
+            Cache::forever('level_range', $levelRange);
+        }
+        return $levelRange;
+    }
+
 }
